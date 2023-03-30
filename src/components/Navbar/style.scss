@@ -1,0 +1,23 @@
+.navbar{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: transparent;
+
+    .ul{
+        text-decoration: none;
+        .li{
+            display: inline;
+            padding-right: 85px;
+        }
+        .li a{
+            text-decoration: none;
+            display: inline;
+        }
+    }
+
+    a{
+        text-decoration: none;
+    }
+    
+}

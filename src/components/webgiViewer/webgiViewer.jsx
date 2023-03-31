@@ -3,7 +3,6 @@ import {
     ViewerApp,
     AssetManagerPlugin,
     GBufferPlugin,
-    timeout,
     ProgressivePlugin,
     TonemapPlugin,
     SSRPlugin,
@@ -18,18 +17,14 @@ import {
     GammaCorrectionPlugin,
     mobileAndTabletCheck,
     addBasePlugins,
-    ITexture, TweakpaneUiPlugin, AssetManagerBasicPopupPlugin, CanvasSnipperPlugin,
-
-    IViewerPlugin,
-
-    // Color, // Import THREE.js internals
-    // Texture, // Import THREE.js internals
-} from "webgi";
+    TweakpaneUiPlugin, AssetManagerBasicPopupPlugin, CanvasSnipperPlugin
+} from "webgi"
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
+import "./style.scss"
 
 
-export default function webgiViewer() {
+export default function WebgiViewer() {
    const canvasRef = useRef(null);
 
 
@@ -68,7 +63,9 @@ export default function webgiViewer() {
     // This must be called once after all plugins are added.
     viewer.renderer.refreshPipeline()
 
-    await manager.addFromPath("scene.glb")
+    await manager.addFromPath("scene.glb");
+
+    viewer.getPlugin(TonemapPlugin).config.clipBackground = true;
 
     // Load an environment map if not set in the glb file
     // await viewer.scene.setEnvironment(
@@ -87,7 +84,7 @@ export default function webgiViewer() {
   return (
     <>
     <div className="webgiViewer-canvas-container">
-           <canvas  id='webgi-canvas' ref={canvasRef}/>
+           <canvas  id='webgi-canvas' height={400} width={450} ref={canvasRef}/>
     </div>
     
     </>

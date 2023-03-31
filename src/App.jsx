@@ -4,7 +4,7 @@ import Navbar from './components/Navbar/Navbar'
 import Header from './components/Header/Header'
 import About from './components/About/About'
 import Schedule from './components/Schedule/Schedule'
-import webgiViewer from './components/webgiViewer/webgiViewer'
+import WebgiViewer from './components/webgiViewer/webgiViewer'
 import Lenis from '@studio-freight/lenis';
 
 
@@ -30,7 +30,7 @@ function App() {
    <>
      <Router>
      <Navbar />
-     <webgiViewer />
+     <WebgiViewer />
       <Link to="/"></Link>
       <Link to="/about"></Link>
       <Link to="/schedule"></Link>

@@ -1,5 +1,6 @@
 import React from 'react'
 import "./style.scss"
+import WebgiViewer from '../webgiViewer/webgiViewer'
 
 export default function Header() {
   return (
@@ -12,7 +13,7 @@ export default function Header() {
 
       {/* here goes the 3d model */}
       <div className="bg-color">
-       
+       <WebgiViewer />
       </div>
     </div>
     </>

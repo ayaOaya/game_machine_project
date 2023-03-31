@@ -1,92 +1,120 @@
-import React, { useRef, useState, useCallback, forwardRef, useImperativeHandle, useEffect } from 'react'
-import {
-    ViewerApp,
-    AssetManagerPlugin,
-    GBufferPlugin,
-    ProgressivePlugin,
-    TonemapPlugin,
-    SSRPlugin,
-    SSAOPlugin,
-    DiamondPlugin,
-    FrameFadePlugin,
-    GLTFAnimationPlugin,
-    GroundPlugin,
-    BloomPlugin,
-    TemporalAAPlugin,
-    AnisotropyPlugin,
-    GammaCorrectionPlugin,
-    mobileAndTabletCheck,
-    addBasePlugins,
-    TweakpaneUiPlugin, AssetManagerBasicPopupPlugin, CanvasSnipperPlugin
-} from "webgi"
+// Import necessary modules
+
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
-import "./style.scss"
+import { useRef, useEffect, useCallback } from 'react';
+import {
+  ViewerApp,
+  AssetManagerPlugin,
+  GBufferPlugin,
+  ProgressivePlugin,
+  TonemapPlugin,
+  SSRPlugin,
+  SSAOPlugin,
+  BloomPlugin,
+  GammaCorrectionPlugin,
+  mobileAndTabletCheck,
+} from 'webgi';
 
+import './style.scss';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function WebgiViewer() {
-   const canvasRef = useRef(null);
+  const canvasRef = useRef(null);
+  const viewerRef = useRef(null);
 
+  const updateCamera = useCallback(
+    (camera, position, target) => {
+      // Set the camera position and target
+      camera.setPosition(position);
+      camera.setTarget(target);
 
-    const setupViewer = useCallback(async () => {
-         // Initialize the viewer
+      // Call camera.positionTargetUpdated to update the camera in the viewer
+      camera.positionTargetUpdated(true);
+    },
+    [],
+  );
+
+  const memoizedScrollAnimation = useCallback(
+    (camera, position, target) => {
+      gsap.to(
+        { x: position.x, y: position.y, z: position.z, tx: target.x, ty: target.y, tz: target.z },
+        {
+          duration: 1,
+          x: 0,
+          y: 0,
+          z: 10,
+          tx: 0,
+          ty: 0,
+          tz: 0,
+          onUpdate: ({ x, y, z, tx, ty, tz }) => {
+            updateCamera(camera, { x, y, z }, { x: tx, y: ty, z: tz });
+          },
+        },
+      );
+    },
+    [updateCamera],
+  );
+
+  const setupViewer = useCallback(async () => {
+    // Initialize the viewer
     const viewer = new ViewerApp({
-        canvas: canvasRef.current,
-    })
+      canvas: canvasRef.current,
+    });
 
     // Add some plugins
-    const manager = await viewer.addPlugin(AssetManagerPlugin)
+    await viewer.addPlugin(AssetManagerPlugin);
 
-    
-
-    // Add plugins individually.
-    // await viewer.addPlugin(GBufferPlugin)
-    // await viewer.addPlugin(new ProgressivePlugin(32))
-    // await viewer.addPlugin(new TonemapPlugin(!viewer.useRgbm))
-    // await viewer.addPlugin(GammaCorrectionPlugin)
-    // await viewer.addPlugin(SSRPlugin)
-    // await viewer.addPlugin(SSAOPlugin)
-    // await viewer.addPlugin(DiamondPlugin)
-    // await viewer.addPlugin(FrameFadePlugin)
-    // await viewer.addPlugin(GLTFAnimationPlugin)
-    // await viewer.addPlugin(GroundPlugin)
-    // await viewer.addPlugin(BloomPlugin)
-    // await viewer.addPlugin(TemporalAAPlugin)
-    // await viewer.addPlugin(AnisotropyPlugin)
-
-    // or use this to add all main ones at once.
-    await addBasePlugins(viewer)
-
-    // Add more plugins not available in base, like CanvasSnipperPlugin which has helpers to download an image of the canvas.
-    await viewer.addPlugin(CanvasSnipperPlugin)
+    await viewer.addPlugin(GBufferPlugin);
+    await viewer.addPlugin(new ProgressivePlugin(32));
+    await viewer.addPlugin(new TonemapPlugin(true));
+    await viewer.addPlugin(GammaCorrectionPlugin);
+    await viewer.addPlugin(SSRPlugin);
+    await viewer.addPlugin(SSAOPlugin);
+    await viewer.addPlugin(BloomPlugin);
 
     // This must be called once after all plugins are added.
-    viewer.renderer.refreshPipeline()
+    viewer.renderer.refreshPipeline();
 
-    await manager.addFromPath("scene.glb");
+    await viewer.getPlugin(AssetManagerPlugin).addFromPath('scene.glb');
 
     viewer.getPlugin(TonemapPlugin).config.clipBackground = true;
 
-    // Load an environment map if not set in the glb file
-    // await viewer.scene.setEnvironment(
-    //     await manager.importer!.importSinglePath<ITexture>(
-    //         "./assets/environment.hdr"
-    //     )
-    // );
+    viewer.scene.activeCamera.setCameraOptions({ controlsEnabled: false });
 
-    }, []);
+    const camera = viewer.scene.activeCamera;
+    const position = camera.position.clone();
+    const target = camera.target.clone();
 
-    useEffect(() =>{
-        setupViewer()
-    }, []);
+    window.scrollTo(0, 0);
 
+    let needsUpdate = true;
+
+    const onUpdate = () => {
+      needsUpdate = true;
+      viewer.setDirty();
+    };
+
+    viewer.addEventListener('preframe', () => {
+      if (needsUpdate) {
+        camera.positionTargetUpdated(true);
+      }
+    });
+
+    memoizedScrollAnimation(camera, position, target);
+
+    viewerRef.current = viewer;
+  }, [memoizedScrollAnimation]);
+
+  useEffect(() => {
+    setupViewer();
+  }, []);
 
   return (
     <>
-    <div className="webgiViewer-canvas-container">
-           <canvas  id='webgi-canvas' height={400} width={450} ref={canvasRef}/>
-    </div>
-    
+      <div className="webgiViewer-canvas-container">
+        <canvas id="webgi-canvas" height={650} width={450} />
+      </div>
     </>
-  )
-}
+)}
